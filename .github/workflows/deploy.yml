@@ -1,5 +1,15 @@
-sudo docker stop monitoring-container || true
-sudo docker rm monitoring-container || true
+- name: Deploy to EC2
+  run: |
+    ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@13.233.231.12 << 'EOF'
+      cd monitoring-system
+      git pull origin main --rebase
 
-sudo docker ps -q --filter "publish=80" | xargs -r sudo docker stop
-sudo docker ps -aq --filter "publish=80" | xargs -r sudo docker rm
+      sudo docker stop monitoring-container || true
+      sudo docker rm monitoring-container || true
+
+      sudo docker ps -q --filter "publish=80" | xargs -r sudo docker stop
+      sudo docker ps -aq --filter "publish=80" | xargs -r sudo docker rm
+
+      sudo docker build -t monitoring-app .
+      sudo docker run -d -p 80:80 --name monitoring-container monitoring-app
+    EOF
